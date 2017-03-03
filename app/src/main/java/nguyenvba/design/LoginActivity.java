@@ -29,19 +29,29 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class LoginActivity extends AppCompatActivity {
-    @BindView(R.id.etEmail) EditText etEmail;
-    @BindView(R.id.etPassword) EditText etPassword;
-    @BindView(R.id.tvRegister) TextView registerLink;
+    @BindView(R.id.etEmail)
+    EditText etEmail;
+    @BindView(R.id.etPassword)
+    EditText etPassword;
+    @BindView(R.id.tvRegister)
+    TextView registerLink;
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-    OkHttpClient client = new OkHttpClient();
+    OkHttpClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+        initViews();
+    }
+
+    private void initViews(){
         ButterKnife.bind(this);// khai bao thu vien trong gradle app
+        etEmail.setText("caothang@gmail.com");
+        etPassword.setText("123456");
+        client = new OkHttpClient();
     }
 
     @OnClick(R.id.tvRegister)
@@ -52,8 +62,8 @@ public class LoginActivity extends AppCompatActivity {
 
     @OnClick(R.id.bLogin)
     public void submit(View view) {//request chuoi json len server
-        String json = "{"+"\""+"email"+"\""+":"+"\""+etEmail.getText()+"\""+","+"\""+"password"+"\""+":"+"\""
-                +etPassword.getText()+"\""+"}";
+        String json = "{" + "\"" + "email" + "\"" + ":" + "\"" + etEmail.getText() + "\"" + "," + "\"" + "password" + "\"" + ":" + "\""
+                + etPassword.getText() + "\"" + "}";
         RequestBody body = RequestBody.create(JSON, json);
         Request request = new Request.Builder()
                 .url("http://phudongtoiyeu.com/api/customer/login")
@@ -64,7 +74,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call call, IOException e) {//fail
-                Log.e("MEOMEO","error "+e.toString());
+                Log.e("MEOMEO", "error " + e.toString());
                 Toast.makeText(LoginActivity.this, "Wrong email or password, " +
                         "pls try again", Toast.LENGTH_LONG).show();
             }
@@ -73,15 +83,18 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) throws IOException {//success
                 String result = response.body().string();
                 String a = "{\"notice\": {\"text\": \"Login Successful\"}";
-                if(result == a){
+                if (result.equalsIgnoreCase(a)) {
                     Intent registerIntent = new Intent(LoginActivity.this, UserSpaceActivity.class);//nhay sang man hinh userspaceactivity
                     startActivity(registerIntent);
+                } else {
+                    LoginActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(LoginActivity.this, "Wrong email or password, " +
+                                    "pls try again", Toast.LENGTH_LONG).show();
+                        }
+                    });
                 }
-                else{
-                    Toast.makeText(LoginActivity.this, "Wrong email or password, " +
-                            "pls try again", Toast.LENGTH_LONG).show();
-                }
-
             }
         });
     }
